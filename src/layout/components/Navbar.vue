@@ -7,27 +7,44 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          <img src="https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif" class="user-avatar">
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
-          <router-link to="/">
-            <el-dropdown-item>
-              Home
-            </el-dropdown-item>
-          </router-link>
-          <a target="_blank" href="https://github.com/PanJiaChen/vue-admin-template/">
-            <el-dropdown-item>Github</el-dropdown-item>
-          </a>
-          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
-            <el-dropdown-item>Docs</el-dropdown-item>
-          </a>
+          <el-dropdown-item>
+            <span style="display:block;" @click="visible = true">修改密码</span>
+          </el-dropdown-item>
           <el-dropdown-item divided>
-            <span style="display:block;" @click="logout">Log Out</span>
+            <span style="display:block;" @click="logout">退出登陆</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+    <el-dialog :visible.sync="visible" title="修改密码" :width="'33%'">
+      <el-form
+        ref="form"
+        :model="form"
+        :rules="loginRules"
+        auto-complete="on"
+        label-width="56px"
+      >
+        <el-form-item prop="userPswd" label="密码">
+          <el-input
+            ref="userPswd"
+            v-model="form.userPswd"
+            placeholder="请输入您的新密码"
+            :type="passwordType"
+            name="userPswd"
+          />
+          <span class="show-pwd" @click="showPwd">
+            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+          </span>
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button :loading="loading" type="primary" @click="handleUpdatePassword">确认修改</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -41,15 +58,66 @@ export default {
     Breadcrumb,
     Hamburger
   },
+
+  data() {
+    const validatePassword = (rule, value, callback) => {
+      if (value.length < 1) {
+        callback(new Error('旧密码不能为空'))
+      } else {
+        callback()
+      }
+    }
+    return {
+      visible: false,
+      loading: false,
+      form: {
+        userPswd: ''
+      },
+      loginRules: {
+        userPswd: [{ required: true, trigger: 'blur', validator: validatePassword }]
+      },
+      passwordType: 'password'
+    }
+  },
   computed: {
     ...mapGetters([
-      'sidebar',
-      'avatar'
+      'sidebar'
     ])
   },
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
+    },
+    handleUpdatePassword() {
+      this.$refs.form.validate(valid => {
+        if (valid) {
+          this.loading = true
+          this.$store.dispatch('user/updateInfo', this.form).then(() => {
+            this.$message({
+              message: '密码修改成功，请使用新密码重新登陆',
+              type: 'success',
+              duration: 1500
+            })
+            this.loading = false
+            this.logout()
+          }).catch(() => {
+            this.loading = false
+          })
+        } else {
+          return false
+        }
+      })
+      // 修改密码
+    },
+    showPwd() {
+      if (this.passwordType === 'password') {
+        this.passwordType = ''
+      } else {
+        this.passwordType = 'password'
+      }
+      this.$nextTick(() => {
+        this.$refs.password.focus()
+      })
     },
     async logout() {
       await this.$store.dispatch('user/logout')
@@ -135,5 +203,14 @@ export default {
       }
     }
   }
+}
+
+.show-pwd {
+  position: absolute;
+  right: 10px;
+  top: 0;
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
 }
 </style>

@@ -26,12 +26,28 @@ import variables from '@/styles/variables.scss'
 
 export default {
   components: { SidebarItem, Logo },
+  data() {
+    return {
+      routers: this.$router.options.routes
+    }
+  },
   computed: {
     ...mapGetters([
-      'sidebar'
+      'sidebar',
+      'isAdmin'
     ]),
     routes() {
-      return this.$router.options.routes
+      let _routers = this.routers
+      if (!this.isAdmin) {
+        _routers = _routers.map(router => {
+          const path = router.path
+          if (['/users', '/departments', '/labels'].includes(path) && path !== '/') {
+            return null
+          }
+          return router
+        }).filter(r => r)
+      }
+      return _routers
     },
     activeMenu() {
       const route = this.$route

@@ -1,11 +1,11 @@
-import { login, logout, getInfo } from '@/api/user'
+import { login, getInfo, updateInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
 
 const state = {
   token: getToken(),
   name: '',
-  avatar: ''
+  isAdmin: false
 }
 
 const mutations = {
@@ -15,20 +15,26 @@ const mutations = {
   SET_NAME: (state, name) => {
     state.name = name
   },
-  SET_AVATAR: (state, avatar) => {
-    state.avatar = avatar
+  SET_ROLE: (state, role) => {
+    state.isAdmin = role === 'admin'
+  },
+  SET_UUID: (state, uuid) => {
+    state.uuid = uuid
   }
 }
 
 const actions = {
   // user login
-  login({ commit }, userInfo) {
-    const { username, password } = userInfo
+  login({ commit }, payload) {
+    const { userCode, password } = payload
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
-        const { data } = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
+      login({ userCode: userCode.trim(), password: password }).then(response => {
+      // login({ username: userCode.trim(), password: password }).then(response => {
+        const { uuid, token } = response
+        commit('SET_UUID', uuid)
+        commit('SET_TOKEN', token)
+        setToken(response.token)
+
         resolve()
       }).catch(error => {
         reject(error)
@@ -37,20 +43,29 @@ const actions = {
   },
 
   // get user info
-  getInfo({ commit, state }) {
+  getInfo({ commit, state }, payload) {
+    !payload && (payload = { uuid: state.uuid })
     return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
-        const { data } = response
-
-        if (!data) {
+      getInfo(payload).then(response => {
+        if (!response) {
           reject('Verification failed, please Login again.')
         }
+        const { userName, isAdmin } = response
+        commit('SET_NAME', userName)
+        commit('SET_ROLE', isAdmin)
+        resolve(response)
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
 
-        const { name, avatar } = data
-
-        commit('SET_NAME', name)
-        commit('SET_AVATAR', avatar)
-        resolve(data)
+  // update user info
+  updateInfo({ commit, state }, payload) {
+    payload.uuid = state.uuid
+    return new Promise((resolve, reject) => {
+      updateInfo(payload).then(_ => {
+        resolve()
       }).catch(error => {
         reject(error)
       })
@@ -59,15 +74,11 @@ const actions = {
 
   // user logout
   logout({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
-        commit('SET_TOKEN', '')
-        removeToken()
-        resetRouter()
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
+    return new Promise(resolve => {
+      commit('SET_TOKEN', '')
+      removeToken()
+      resetRouter()
+      resolve()
     })
   },
 
