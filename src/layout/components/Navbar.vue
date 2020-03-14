@@ -7,7 +7,8 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <img src="https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif" class="user-avatar">
+          <div class="username">{{ name }}</div>
+          <!-- <img src="https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif" class="user-avatar"> -->
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
@@ -81,7 +82,8 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'sidebar'
+      'sidebar',
+      'name'
     ])
   },
   methods: {
@@ -183,22 +185,21 @@ export default {
       margin-right: 30px;
 
       .avatar-wrapper {
-        margin-top: 5px;
+        display: flex;
+        align-items: center;
         position: relative;
+        cursor: pointer;
+
+        .username {
+          font-weight: 500;
+          padding-right: 8px;
+        }
 
         .user-avatar {
           cursor: pointer;
           width: 40px;
           height: 40px;
           border-radius: 10px;
-        }
-
-        .el-icon-caret-bottom {
-          cursor: pointer;
-          position: absolute;
-          right: -20px;
-          top: 25px;
-          font-size: 12px;
         }
       }
     }

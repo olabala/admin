@@ -154,6 +154,15 @@ export default {
   name: 'Data',
   components: { Pagination },
   data() {
+    const validatorMobile = (rule, value, callback) => {
+      if (value.length < 1) {
+        callback(new Error('请输入手机号'))
+      } else if (!/^(0|86|17951)?(13[0-9]|15[012356789]|166|17[3678]|18[0-9]|14[57])[0-9]{8}$/i.test(value)) {
+        callback(new Error('请输入正确的手机号'))
+      } else {
+        callback()
+      }
+    }
     return {
       dataList: [],
       labels: [],
@@ -179,7 +188,7 @@ export default {
         tag: ''
       },
       rules: {
-        mobile: [{ required: true, trigger: 'blur', message: '请输入标签名' }],
+        mobile: [{ required: true, trigger: 'blur', validator: validatorMobile }],
         mobileName: [{ required: true, trigger: 'blur', message: '请输入姓名' }],
         tag: [{ required: true, trigger: 'change', message: '请选择标签' }]
       },
